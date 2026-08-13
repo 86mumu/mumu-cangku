@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#fff7f9">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>木木的工作台</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== Main ===== -->
+<main id="main" class="main">
+  <div class="content">
+    <section id="page-home" class="page active"></section>
+    <section id="page-todo" class="page"></section>
+    <section id="page-fatloss" class="page"></section>
+    <section id="page-food" class="page"></section>
+    <section id="page-account" class="page"></section>
+    <section id="page-study" class="page"></section>
+    <section id="page-travel" class="page"></section>
+    <section id="page-fast" class="page"></section>
+    <section id="page-fasthistory" class="page"></section>
+  </div>
+</main>
+
+<!-- ===== 左侧导航（固定窄栏：头像 + 木木/工作台 + 图标竖排） ===== -->
+<nav class="side-bar" id="side-bar">
+  <!-- 品牌：头像 → 木木/工作台 -->
+  <div class="sb-brand">
+    <button class="avatar-wrap" id="avatar-btn" title="上传头像">
+      <span class="avatar" id="avatar-img"></span>
+    </button>
+    <b class="sb-title">木木<br>工作台</b>
+  </div>
+  <!-- 菜单（图标在上、文字在下） -->
+  <div class="sb-menu">
+    <button class="tab-item active" data-page="home" onclick="Nav.go('home')">
+      <span class="tab-ico" data-ico="home"></span><span class="tab-label">首页</span>
+    </button>
+    <button class="tab-item" data-page="todo" onclick="Nav.go('todo')">
+      <span class="tab-ico" data-ico="note"></span><span class="tab-label">记事</span>
+    </button>
+    <button class="tab-item" data-page="fatloss" onclick="Nav.go('fatloss')">
+      <span class="tab-ico" data-ico="fatloss"></span><span class="tab-label">减脂</span>
+    </button>
+    <button class="tab-item" data-page="food" onclick="Nav.go('food')">
+      <span class="tab-ico" data-ico="food"></span><span class="tab-label">食记</span>
+    </button>
+    <button class="tab-item" data-page="account" onclick="Nav.go('account')">
+      <span class="tab-ico" data-ico="account"></span><span class="tab-label">记账</span>
+    </button>
+    <button class="tab-item" data-page="study" onclick="Nav.go('study')">
+      <span class="tab-ico" data-ico="english"></span><span class="tab-label">学习</span>
+    </button>
+    <button class="tab-item" data-page="travel" onclick="Nav.go('travel')">
+      <span class="tab-ico" data-ico="travel"></span><span class="tab-label">旅游</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== Modal ===== -->
+<div id="modal-root" class="modal-root"></div>
+<input type="file" id="avatar-input" accept="image/*" style="display:none">
+<input type="file" id="food-input" accept="image/*" style="display:none">
+
+<!-- ===== Toast ===== -->
+<div id="toast" class="toast"></div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  window.supabase={createClient};
+</script>
+<script src="js/words_bank.js"></script>
+<script src="js/words_colloc.js"></script>
+<script src="js/phonetics.js"></script>
+<script src="js/caticons.js"></script>
+<script src="js/sha256.js"></script>
+<script src="js/store.js"></script>
+<script src="js/recipes.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/home.js"></script>
+<script src="js/todo.js"></script>
+<script src="js/fatloss.js"></script>
+<script src="js/poop.js"></script>
+<script src="js/period.js"></script>
+<script src="js/food.js"></script>
+<script src="js/accounting.js"></script>
+<script src="js/english.js"></script>
+<script src="js/study.js"></script>
+<script src="js/reading.js"></script>
+<script src="js/travel.js"></script>
+<script src="js/fast.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
