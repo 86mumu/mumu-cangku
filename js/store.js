@@ -219,7 +219,8 @@
     if(!Array.isArray(d.poops))d.poops=[];
     d.poops.forEach(x=>{
       if(!x.id)x.id=uid();
-      if(typeof x.shape!=='number')x.shape=+x.shape||4;
+      if(typeof x.shape==='number')x.shape=[x.shape];
+      else if(!Array.isArray(x.shape))x.shape=[+x.shape||4];
       if(typeof x.blood!=='boolean')x.blood=!!x.blood;
       if(typeof x.note!=='string')x.note='';
       if(typeof x.time!=='string')x.time='';
