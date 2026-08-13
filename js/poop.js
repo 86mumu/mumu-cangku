@@ -38,8 +38,13 @@
       '<ellipse cx="30" cy="24" rx="14" ry="3.6" fill="'+BR2+'" opacity=".8" stroke="none"/>'+
       '<path d="M11 16.5c1.5 1.5 1.5 3 0 4M49 15c1.6 1.6 1.6 3.2 0 4.4M30 13c1.4 1.4 1.4 2.8 0 4" opacity=".6"/>')}
   ];
-  function shapeSvg(t){const s=SHAPES.find(x=>x.t===+t);return s?s.svg:SHAPES[3].svg;}
-  function shapeName(t){const s=SHAPES.find(x=>x.t===+t);return s?('第'+s.t+'型 '+s.name):'未知';}
+  function firstShape(t){return Array.isArray(t)?(t[0]||4):+t||4;}
+  function shapeSvg(t){const s=SHAPES.find(x=>x.t===firstShape(t));return s?s.svg:SHAPES[3].svg;}
+  function shapeName(t){
+    if(Array.isArray(t)&&t.length)return t.map(v=>{const s=SHAPES.find(x=>x.t===+v);return s?('第'+s.t+'型 '+s.name):'未知';}).join('，');
+    const s=SHAPES.find(x=>x.t===firstShape(t));
+    return s?('第'+s.t+'型 '+s.name):'未知';
+  }
 
   /* ---------- 选项表 ---------- */
   const COLORS=[
@@ -48,18 +53,19 @@
   ];
   const AMOUNTS=['非常少','少','适中','多','较多'];
   const SMELLS=['不臭','臭','很臭','非常臭'];
-  const FEELS=['顺畅','费力','便秘','腹泻','排不尽'];
+  const FEELS=['顺畅','适中','困难','便秘','腹泻','残余绞痛','排不尽'];
   const DURS=['<5min','5-10min','>10min'];
-  const BODYS=['顺畅','适中','困难','残余绞痛','下坠感'];
   const PLACES=['家里','公司','外出'];
 
   /* ---------- 自动评分 + 文字分析 ---------- */
   function evaluate(r){
     let s=100; const warn=[], tip=[];
     const shapeCut={1:-22,2:-12,3:-2,4:0,5:-8,6:-16,7:-24};
-    s+=shapeCut[+r.shape]||0;
-    if(+r.shape<=2)tip.push('便便偏干硬，多喝温水、多吃蔬果和粗粮会舒服很多');
-    if(+r.shape>=6)tip.push('便便偏稀，饮食清淡一点、少吃生冷，注意保暖');
+    const shapeArr=Array.isArray(r.shape)?(r.shape.length?r.shape:[4]):[+r.shape||4];
+    s+=shapeArr.reduce((sum,t)=>sum+(shapeCut[+t]||0),0)/shapeArr.length;
+    const minShape=Math.min(...shapeArr), maxShape=Math.max(...shapeArr);
+    if(minShape<=2)tip.push('便便偏干硬，多喝温水、多吃蔬果和粗粮会舒服很多');
+    if(maxShape>=6)tip.push('便便偏稀，饮食清淡一点、少吃生冷，注意保暖');
 
     const colorCut={'黄褐色':0,'深褐色':-2,'绿色':-10,'黑色':-28,'红色':-28,'灰白色':-26};
     s+=colorCut[r.color]!==undefined?colorCut[r.color]:0;
@@ -72,18 +78,16 @@
     s+={'不臭':0,'臭':-2,'很臭':-6,'非常臭':-10}[r.smell]||0;
     if(r.smell==='非常臭')tip.push('气味重多与高蛋白高油饮食有关，试试多蔬菜少油炸');
 
-    s+={'顺畅':0,'费力':-8,'便秘':-16,'腹泻':-16,'排不尽':-9}[r.feel]||0;
+    s+={'顺畅':0,'适中':-2,'困难':-9,'便秘':-16,'腹泻':-16,'残余绞痛':-11,'排不尽':-9}[r.feel]||0;
     if(r.feel==='便秘')tip.push('轻微便秘，多喝水、加点膳食纤维，早起一杯温水很有用');
     if(r.feel==='腹泻')tip.push('腹泻要注意补水和电解质，饮食以清淡易消化为主');
     if(r.feel==='排不尽')tip.push('总觉得排不尽，别久蹲久坐，每天固定时间上厕所更规律');
+    if(r.feel==='残余绞痛')tip.push('排后仍绞痛，注意腹部保暖、避免辛辣，持续不适要就医');
 
     s+={'<5min':0,'5-10min':-4,'>10min':-10}[r.dur]||0;
     if(r.dur==='>10min')tip.push('蹲太久容易痔疮，建议控制在 5 分钟内，别带手机进厕所');
 
     if(r.blood){s-=26;warn.push('本次有出血，先观察是否为便秘擦伤；反复出血一定要就医');}
-
-    s+={'顺畅':0,'适中':-2,'困难':-9,'残余绞痛':-11,'下坠感':-8}[r.body]||0;
-    if(r.body==='残余绞痛')tip.push('排后仍绞痛，注意腹部保暖、避免辛辣，持续不适要就医');
 
     s=Math.max(0,Math.min(100,Math.round(s)));
     let level;
@@ -195,7 +199,6 @@
         <span class="pc-tag">${p.feel||'—'}</span>
         <span class="pc-tag">${p.dur||'—'}</span>
         <span class="pc-tag">${p.smell||'—'}</span>
-        <span class="pc-tag">${p.body||'—'}</span>
         <span class="pc-tag">${p.place||'—'}</span>
         ${p.blood?'<span class="pc-tag danger">有出血</span>':''}
       </div>
@@ -210,8 +213,8 @@
     const t=S.today(), from=S.addDays(t,-29);
     const recent=(S.get().poops||[]).filter(p=>p.date>=from&&p.date<=t);
     const blood=recent.filter(p=>p.blood||p.color==='红色'||p.color==='黑色');
-    const loose=recent.filter(p=>+p.shape>=6||p.feel==='腹泻');
-    const hard=recent.filter(p=>+p.shape<=2||p.feel==='便秘');
+    const loose=recent.filter(p=>{const arr=Array.isArray(p.shape)?p.shape:[+p.shape||4];return arr.some(t=>+t>=6)||p.feel==='腹泻';});
+    const hard=recent.filter(p=>{const arr=Array.isArray(p.shape)?p.shape:[+p.shape||4];return arr.some(t=>+t<=2)||p.feel==='便秘';});
     const msgs=[];
     if(blood.length>=2)msgs.push('近 30 天有 '+blood.length+' 次便血或异常颜色，建议尽快去医院看看，别自己扛 🌸');
     if(loose.length>=5)msgs.push('近 30 天有 '+loose.length+' 次偏稀/腹泻，注意饮食清淡与腹部保暖，持续两周以上建议就医');
@@ -260,19 +263,32 @@
   function nowHM(){const d=new Date();return S.pad(d.getHours())+':'+S.pad(d.getMinutes());}
   function add(){
     editId=null;
-    form={date:view,time:nowHM(),shape:4,color:'黄褐色',amount:'适中',smell:'臭',
-          feel:'顺畅',dur:'<5min',blood:false,body:'顺畅',place:'家里',note:''};
+    form={date:view,time:nowHM(),shape:[4],color:'黄褐色',amount:'适中',smell:'臭',
+          feel:'顺畅',dur:'<5min',blood:false,place:'家里',note:''};
     openForm();
   }
   function edit(id){
     const p=(S.get().poops||[]).find(x=>x.id===id);if(!p)return;
     editId=id;form=Object.assign({},p);
+    // 形状改成数组存储；排便感受/便便感受合并后，旧记录的 body 可映射到 feel
+    if(typeof form.shape==='number')form.shape=[form.shape];
+    else if(!Array.isArray(form.shape))form.shape=[4];
+    if(!FEELS.includes(form.feel) && FEELS.includes(form.body))form.feel=form.body;
     openForm();
   }
   function grp(field,list,cur){
     return '<div class="seg wrap" data-grp="'+field+'">'+list.map(v=>{
       const val=Array.isArray(v)?v[0]:v, dot=Array.isArray(v)?'<i class="cdot" style="background:'+v[1]+'"></i>':'';
       return '<span class="opt'+(cur===val?' on':'')+'" data-f="'+field+'" data-v="'+val+'">'+dot+val+'</span>';
+    }).join('')+'</div>';
+  }
+  function amountScale(cur){
+    const map={'非常少':1,'少':2,'适中':3,'多':4,'较多':5};
+    return '<div class="banana-scale">'+AMOUNTS.map(a=>{
+      const n=map[a]||1;
+      return '<div class="banana-opt'+(cur===a?' on':'')+'" data-f="amount" data-v="'+a+'">'+
+        '<div class="banana-row">'+'🍌'.repeat(n)+'</div>'+
+        '<div class="banana-label">'+a+'</div></div>';
     }).join('')+'</div>';
   }
   function openForm(){
@@ -284,9 +300,9 @@
         <div class="field"><label>时间</label><input id="pf-time" type="time" value="${form.time||''}"></div>
       </div>
 
-      <div class="field"><label>排便形状（布里斯托分型）</label></div>
-      <div class="bristol" id="pf-shape">
-        ${SHAPES.map(s=>`<div class="bs-item${+form.shape===s.t?' on':''}" data-f="shape" data-v="${s.t}">
+      <div class="field"><label>排便形状（布里斯托分型，可多选）</label></div>
+      <div class="bristol" id="pf-shape" data-multi="1">
+        ${SHAPES.map(s=>`<div class="bs-item${Array.isArray(form.shape)&&form.shape.includes(s.t)?' on':''}" data-f="shape" data-v="${s.t}" data-multi="1">
             <div class="bs-svg">${s.svg}</div>
             <div class="bs-t">${s.t}型 ${s.name}</div>
             <div class="bs-d">${s.desc}</div>
@@ -294,12 +310,11 @@
       </div>
 
       <div class="field"><label>颜色</label></div>${grp('color',COLORS,form.color)}
-      <div class="field mt8"><label>分量</label></div>${grp('amount',AMOUNTS,form.amount)}
+      <div class="field mt8"><label>分量</label></div>${amountScale(form.amount)}
       <div class="field mt8"><label>气味</label></div>${grp('smell',SMELLS,form.smell)}
       <div class="field mt8"><label>排便感受</label></div>${grp('feel',FEELS,form.feel)}
       <div class="field mt8"><label>排便时长</label></div>${grp('dur',DURS,form.dur)}
       <div class="field mt8"><label>是否出血</label></div>${grp('blood',['否','是'],form.blood?'是':'否')}
-      <div class="field mt8"><label>便便感受</label></div>${grp('body',BODYS,form.body)}
       <div class="field mt8"><label>地点</label></div>${grp('place',PLACES,form.place)}
 
       <div class="field mt12"><label>备注</label><textarea id="pf-note" rows="2" placeholder="今天喝水少了 / 昨晚吃了火锅…">${esc(form.note||'')}</textarea></div>
@@ -315,9 +330,20 @@
     root.addEventListener('click',e=>{
       const o=e.target.closest('[data-f]');if(!o||!root.contains(o))return;
       const f=o.dataset.f, v=o.dataset.v;
-      form[f]= f==='blood' ? (v==='是') : (f==='shape'?+v:v);
+      if(f==='blood'){ form.blood=(v==='是'); }
+      else if(f==='shape'){
+        const n=+v;
+        let arr=Array.isArray(form.shape)?form.shape:[+form.shape||4];
+        if(arr.includes(n)){ if(arr.length>1) arr=arr.filter(x=>x!==n); }
+        else arr.push(n);
+        form.shape=arr.sort((a,b)=>a-b);
+        o.classList.toggle('on');
+        preview(); return;
+      } else {
+        form[f]=v;
+      }
       const box=o.parentElement;
-      box.querySelectorAll('[data-f="'+f+'"]').forEach(x=>x.classList.remove('on'));
+      if(box)box.querySelectorAll('[data-f="'+f+'"]').forEach(x=>x.classList.remove('on'));
       o.classList.add('on');
       preview();
     });
