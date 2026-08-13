@@ -282,18 +282,8 @@
       return '<span class="opt'+(cur===val?' on':'')+'" data-f="'+field+'" data-v="'+val+'">'+dot+val+'</span>';
     }).join('')+'</div>';
   }
-  function bananaSvg(cls,idx){
-    return '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" class="banana-ico'+cls+'" data-f="amount" data-v="'+idx+'">'+
-      '<path d="M8 32 C8 14, 20 7, 34 11 C36 12, 35 15, 33 15 C22 11, 14 17, 12 32 C11 34, 8 34, 8 32 Z" fill="currentColor" opacity=".95"/>'+
-      '<path d="M34 11 C35 10, 37 11, 37 13 C37 15, 35 16, 33 15" fill="#7a5230"/>'+
-      '</svg>';
-  }
   function amountScale(cur){
-    const map={'非常少':1,'少':2,'适中':3,'多':4,'较多':5};
-    const idx=map[cur]||3;
-    return '<div class="banana-scale"><div class="banana-rate">'+[1,2,3,4,5].map(n=>
-      bananaSvg(n<=idx?' on':'',n)
-    ).join('')+'</div></div>';
+    return grp('amount',AMOUNTS,cur);
   }
   function openForm(){
     UI.modal(`
@@ -342,11 +332,6 @@
         else arr.push(n);
         form.shape=arr.sort((a,b)=>a-b);
         o.classList.toggle('on');
-        preview(); return;
-      } else if(f==='amount'){
-        const n=+v, rev={1:'非常少',2:'少',3:'适中',4:'多',5:'较多'};
-        form.amount=rev[n]||'适中';
-        root.querySelectorAll('[data-f="amount"]').forEach((svg,i)=>svg.classList.toggle('on',i+1<=n));
         preview(); return;
       } else {
         form[f]=v;
