@@ -799,6 +799,16 @@ button,.btn,.row,.chip,.pill,.opt,.tab-item,.cbox,.water-cup,.stat,[onclick]{tou
 .bs-item.on .bs-t{color:var(--pink);}
 .bs-d{font-size:9px;color:var(--text3);line-height:1.3;margin-top:1px;}
 
+/* 分量：香蕉量级图示 */
+.banana-scale{display:flex;gap:8px;justify-content:space-between;margin-bottom:4px;}
+.banana-opt{flex:1;min-width:54px;text-align:center;padding:9px 3px;border:1px solid var(--line2);border-radius:14px;background:#fffdfe;cursor:pointer;transition:.18s;}
+.banana-opt.on{background:var(--grad-soft);border-color:var(--pink);box-shadow:0 2px 8px rgba(240,160,185,.22);}
+.banana-opt:active{transform:scale(.96);}
+.banana-row{font-size:19px;line-height:1.1;letter-spacing:-3px;margin-bottom:4px;filter:grayscale(100%);opacity:.5;}
+.banana-opt.on .banana-row{filter:none;opacity:1;}
+.banana-label{font-size:11px;color:var(--text2);line-height:1.2;}
+.banana-opt.on .banana-label{color:var(--pink);font-weight:600;}
+
 /* 颜色选项上的小圆点 */
 .cdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;
   vertical-align:middle;border:1px solid rgba(0,0,0,.08);}
