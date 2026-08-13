@@ -168,6 +168,15 @@
         ${recent}
       </div>
 
+      <div class="card">
+        <div class="card-h"><div class="l"><span class="ico">💾</span>数据备份 / 恢复</div></div>
+        <div class="small muted" style="margin-bottom:10px">把工作台全部数据（待办、饮食、体重、记账、轻断食等）导出成文件，或从上次备份恢复。换网址 / 换设备时用它迁移数据。</div>
+        <div class="flex gap8">
+          <button class="btn btn-primary btn-block" onclick="Acc.backup()">⬇️ 备份到文件</button>
+          <button class="btn btn-ghost btn-block" onclick="Acc.restore()">⬆️ 从文件恢复</button>
+        </div>
+      </div>
+
       <button class="acc-fab" onclick="Acc.openAdd()">＋<br>记一笔</button>
     `;
   }
@@ -1519,6 +1528,51 @@
     showPreview(parseCsv(txt),'粘贴文本');
   }
 
+  /* ---- 整库备份 / 恢复（迁移用） ---- */
+  let _restoreText=null;
+  function backup(){
+    try{
+      const json=S.exportJSON();
+      const blob=new Blob([json],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      const d=(S.today()||'').replace(/-/g,'');
+      a.href=url; a.download='mumu-workbench-'+(d||'backup')+'.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>{try{URL.revokeObjectURL(url);}catch(e){}},1000);
+      UI.toast('已导出备份文件 💾');
+    }catch(e){ console.error(e); UI.toast('备份失败：'+(e&&e.message||e)); }
+  }
+  function restore(){
+    _restoreText=null;
+    UI.modal(`<div class="modal-title">⚠️ 从备份恢复数据</div>
+      <div class="small muted">选择之前导出的备份文件（.json）。恢复会用备份<b>整体替换</b>当前这台设备上的全部数据，建议先点「备份到文件」存一份当前数据再恢复。</div>
+      <div class="field mt12"><input id="bk-file" type="file" accept="application/json,.json" onchange="Acc._onFile(this)"></div>
+      <div id="bk-msg" class="small muted" style="min-height:18px"></div>
+      <div class="flex gap8 mt12">
+        <button class="btn btn-primary btn-block" onclick="Acc._doRestore()">确认恢复</button>
+        <button class="btn btn-ghost btn-block" onclick="UI.close()">取消</button>
+      </div>`);
+  }
+  function _onFile(input){
+    const f=input.files&&input.files[0]; if(!f){_restoreText=null;return;}
+    const r=new FileReader();
+    r.onload=()=>{ _restoreText=String(r.result||''); const m=document.getElementById('bk-msg'); if(m)m.textContent='已读取：'+f.name+'（'+(_restoreText.length)+' 字符）'; };
+    r.onerror=()=>{ _restoreText=null; const m=document.getElementById('bk-msg'); if(m)m.textContent='读取失败，请重试'; };
+    r.readAsText(f);
+  }
+  function _doRestore(){
+    if(!_restoreText){ UI.toast('请先选择备份文件'); return; }
+    try{
+      S.importJSON(_restoreText);
+      _restoreText=null; UI.close();
+      ['Home','Todo','Fat','Acc','Food','Travel','Study','Period','Poop','Reading'].forEach(n=>{try{window[n]&&window[n].render&&window[n].render();}catch(e){}});
+      if(window.Home)try{Home.render();}catch(e){}
+      if(window.Nav&&Nav.refresh)try{Nav.refresh();}catch(e){}
+      UI.toast('已从备份恢复全部数据 ✅');
+    }catch(e){ console.error(e); UI.toast('恢复失败：'+(e&&e.message||e)); }
+  }
+
   window.Acc={render,setTab,shiftMonth,goCalToday,pickMonth,pickCalDate,
     toggleHide,openAdd,saveBill,editBill,openEditBill,saveEditBill,delBillFromEdit,delBill,genBrief,openImport,runImport,confirmImport,clearImported,
     searchBills,openComposition,exportBills,
@@ -1526,5 +1580,6 @@
     pickCat,switchType,manageCats,saveCats,moveCat,delCat,addCat,pickIcon,setIcon,backToAdd,toggleExb,editBudget,saveBudget,
     openSaving,saveSaving,openPlan,backSavings,planMore,archivePlan,delPlan,doDelPlan,openDeposit,saveDeposit,editDeposit,saveDepositEdit,withdrawDeposit,delDeposit,svSwitch,scrollArchived,toggleArchived,openArchived,renderArchivedPlans,movePlan,planSortMenu,bindPlanGestures,
     svfSetMode,svfRecalc,svfPickDate,svfPickPeriod,svfSetPeriod,svfFixedLabel,openIconPicker,pickSvIcon,computeTarget,
-    closeAdd,renderAddPage,addCatGrid,switchAddType,clickAddCat,showSubcatPop,hideSubcatPop,pickSubCat,pickAddDate,closeSubOnDoc};
+    closeAdd,renderAddPage,addCatGrid,switchAddType,clickAddCat,showSubcatPop,hideSubcatPop,pickSubCat,pickAddDate,closeSubOnDoc,
+    backup,restore,_onFile,_doRestore};
 })();
